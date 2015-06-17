@@ -31,7 +31,7 @@ from neutron.common import config
 from neutron.common import rpc as n_rpc
 from neutron import context
 from neutron.db import api as session
-from neutron.i18n import _LE, _LI
+from neutron.i18n import _LE, _LI, _LW
 from neutron import manager
 from neutron.openstack.common import loopingcall
 from neutron.openstack.common import service as common_service
@@ -72,7 +72,7 @@ def setup_profiler(binary, host):
     if CONF.profiler.profiler_enabled:
         _notifier = osprofiler.notifier.create(
             "Messaging", messaging, context.get_admin_context().to_dict(),
-            rpc.TRANSPORT, "cinder", binary, host)
+            n_rpc.TRANSPORT, "neutron", binary, host)
         osprofiler.notifier.set(_notifier)
         LOG.warning(
             _LW("OSProfiler is enabled.\nIt means that person who knows "
