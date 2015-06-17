@@ -18,6 +18,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_messaging import serializer as om_serializer
+from osprofiler import profiler
 
 from neutron.common import exceptions
 from neutron import context
@@ -120,9 +121,22 @@ class RequestContextSerializer(om_serializer.Serializer):
         return self._base.deserialize_entity(ctxt, entity)
 
     def serialize_context(self, ctxt):
-        return ctxt.to_dict()
+        _context = ctxt.to_dict()
+        prof = profiler.get()
+        if prof:
+            trace_info = {
+                "hmac_key": prof.hmac_key,
+                "base_id": prof.get_base_id(),
+                "parent_id": prof.get_id()
+            }
+            _context.update({"trace_info": trace_info})
+        #return ctxt.to_dict()
+        return _context
 
     def deserialize_context(self, ctxt):
+        trace_info = ctxt.pop("trace_info", None)
+        if trace_info:
+            profiler.init(**trace_info)
         rpc_ctxt_dict = ctxt.copy()
         user_id = rpc_ctxt_dict.pop('user_id', None)
         if not user_id:

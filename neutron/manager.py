@@ -19,6 +19,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_utils import importutils
+from osprofiler import profiler
 
 from neutron.common import utils
 from neutron.i18n import _LE, _LI
@@ -27,12 +28,11 @@ from neutron.plugins.common import constants
 
 from stevedore import driver
 
-
 LOG = logging.getLogger(__name__)
 
 CORE_PLUGINS_NAMESPACE = 'neutron.core_plugins'
 
-
+@profiler.trace_cls("rpc")
 class Manager(periodic_task.PeriodicTasks):
 
     # Set RPC API version to 1.0 by default.

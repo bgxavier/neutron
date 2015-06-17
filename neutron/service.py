@@ -21,8 +21,10 @@ import random
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_messaging import server as rpc_server
+import oslog_messaging as messaging
 from oslo_utils import excutils
 from oslo_utils import importutils
+import osprofiler.notifier
 
 from neutron.common import config
 from neutron.common import rpc as n_rpc
@@ -51,10 +53,38 @@ service_opts = [
                       'periodic task scheduler to reduce stampeding. '
                       '(Disable by setting to 0)')),
 ]
+
+profiler_opts = [
+    cfg.BoolOpt("profiler_enabled", default=False,
+                help=_('If False fully disable profiling feature.')),
+    cfg.BoolOpt("trace_sqlalchemy", default=False,
+                help=_("If False doesn't trace SQL requests."))
+]
+
 CONF = cfg.CONF
 CONF.register_opts(service_opts)
+CONF.register_opts(profiler_opts, group="profiler")
 
 LOG = logging.getLogger(__name__)
+
+def setup_profiler(binary, host):
+    if CONF.profiler.profiler_enabled:
+        _notifier = osprofiler.notifier.create(
+            "Messaging", messaging, context.get_admin_context().to_dict(),
+            rpc.TRANSPORT, "cinder", binary, host)
+        osprofiler.notifier.set(_notifier)
+        LOG.warning(
+            _LW("OSProfiler is enabled.\nIt means that person who knows "
+                "any of hmac_keys that are specified in "
+                "/etc/cinder/api-paste.ini can trace his requests. \n"
+                "In real life only operator can read this file so there "
+                "is no security issue. Note that even if person can "
+                "trigger profiler, only admin user can retrieve trace "
+                "information.\n"
+                "To disable OSprofiler set in cinder.conf:\n"
+                "[profiler]\nenabled=false"))
+    else:
+        osprofiler.web.disable()
 
 
 class WsgiService(object):
@@ -69,6 +99,8 @@ class WsgiService(object):
     def __init__(self, app_name):
         self.app_name = app_name
         self.wsgi_app = None
+        self.host = getattr(CONF, '%s_listen' % app_name, "0.0.0.0")
+        setup_profiler(app_name,self.host)
 
     def start(self):
         self.wsgi_app = _run_wsgi(self.app_name)
@@ -194,6 +226,7 @@ class Service(n_rpc.Service):
         self.binary = binary
         self.manager_class_name = manager
         manager_class = importutils.import_class(self.manager_class_name)
+        manager_class = profiler.trace_cls("rpc")(manager_class)
         self.manager = manager_class(host=host, *args, **kwargs)
         self.report_interval = report_interval
         self.periodic_interval = periodic_interval
@@ -201,6 +234,7 @@ class Service(n_rpc.Service):
         self.saved_args, self.saved_kwargs = args, kwargs
         self.timers = []
         super(Service, self).__init__(host, topic, manager=self.manager)
+        setup_profiler(binary, host)
 
     def start(self):
         self.manager.init_host()

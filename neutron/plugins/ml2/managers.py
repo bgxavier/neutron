@@ -16,6 +16,7 @@
 from oslo_config import cfg
 from oslo_log import log
 import stevedore
+from osprofiler import profiler
 
 from neutron.api.v2 import attributes
 from neutron.common import exceptions as exc
@@ -34,6 +35,7 @@ LOG = log.getLogger(__name__)
 MAX_BINDING_LEVELS = 10
 
 
+@profiler.trace_cls("rpc")
 class TypeManager(stevedore.named.NamedExtensionManager):
     """Manage network segment types using drivers."""
 
@@ -258,6 +260,7 @@ class TypeManager(stevedore.named.NamedExtensionManager):
             LOG.debug("No segment found with id %(segment_id)s", segment_id)
 
 
+@profiler.trace_cls("rpc")
 class MechanismManager(stevedore.named.NamedExtensionManager):
     """Manage networking mechanisms using drivers."""
 
@@ -692,6 +695,7 @@ class MechanismManager(stevedore.named.NamedExtensionManager):
         return True
 
 
+@profiler.trace_cls("rpc")
 class ExtensionManager(stevedore.named.NamedExtensionManager):
     """Manage extension drivers using drivers."""
 

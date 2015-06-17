@@ -16,6 +16,7 @@
 from oslo_log import log
 import oslo_messaging
 from sqlalchemy.orm import exc
+from osprofiler import profiler
 
 from neutron.agent import securitygroups_rpc as sg_rpc
 from neutron.api.rpc.handlers import dvr_rpc
@@ -37,7 +38,7 @@ from neutron.plugins.ml2.drivers import type_tunnel
 
 LOG = log.getLogger(__name__)
 
-
+@profiler.trace_cls("rpc")
 class RpcCallbacks(type_tunnel.TunnelRpcCallbackMixin):
 
     # history
@@ -201,6 +202,7 @@ class RpcCallbacks(type_tunnel.TunnelRpcCallbackMixin):
                 resources.PORT, events.AFTER_UPDATE, plugin, **kwargs)
 
 
+@profiler.trace_cls("rpc")
 class AgentNotifierApi(dvr_rpc.DVRAgentRpcApiMixin,
                        sg_rpc.SecurityGroupAgentRpcApiMixin,
                        type_tunnel.TunnelAgentRpcApiMixin):
