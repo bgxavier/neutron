@@ -25,6 +25,7 @@ import oslo_messaging as messaging
 from oslo_utils import excutils
 from oslo_utils import importutils
 import osprofiler.notifier
+from osprofiler import profiler
 
 from neutron.common import config
 from neutron.common import rpc as n_rpc
