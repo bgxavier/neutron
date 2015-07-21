@@ -86,8 +86,6 @@ MAX_BIND_TRIES = 10
 # providernet.py?
 TYPE_MULTI_SEGMENT = 'multi-segment'
 
-
-@profiler.trace_cls("rpc")
 class Ml2Plugin(db_base_plugin_v2.NeutronDbPluginV2,
                 dvr_mac_db.DVRDbMixin,
                 external_net_db.External_net_db_mixin,

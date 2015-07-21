@@ -226,7 +226,7 @@ class Service(n_rpc.Service):
 
         self.binary = binary
         self.manager_class_name = manager
-        manager_class = importutils.import_class(self.manager_class_name)
+        manager_class = importutils.import_class(self.manager_class_name)        
         manager_class = profiler.trace_cls("rpc")(manager_class)
         self.manager = manager_class(host=host, *args, **kwargs)
         self.report_interval = report_interval

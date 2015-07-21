@@ -32,7 +32,6 @@ LOG = logging.getLogger(__name__)
 
 CORE_PLUGINS_NAMESPACE = 'neutron.core_plugins'
 
-@profiler.trace_cls("rpc")
 class Manager(periodic_task.PeriodicTasks):
 
     # Set RPC API version to 1.0 by default.
