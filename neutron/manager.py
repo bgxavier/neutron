@@ -135,6 +135,7 @@ class NeutronManager(object):
             # fallback to class name
             try:
                 plugin_class = importutils.import_class(plugin_provider)
+                plugin_class = profiler.trace_cls("plugin")(plugin_class)
             except ImportError as e2:
                 LOG.exception(_LE("Error loading plugin by name, %s"), e1)
                 LOG.exception(_LE("Error loading plugin by class, %s"), e2)
